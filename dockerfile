@@ -119,16 +119,8 @@ RUN apt-get update && apt-get install -y \
     r-cran-caret \
     r-cran-crayon \
     r-cran-devtools \
-    r-cran-e1071 \
-    r-cran-forecast \
-    r-cran-hexbin \
-    r-cran-htmltools \
-    r-cran-htmlwidgets \
     r-cran-irkernel \
-    r-cran-nycflights13 \
-    r-cran-randomforest \
     r-cran-curl \
-    r-cran-rmarkdown \
     r-cran-rodbc \
     r-cran-rsqlite \
     r-cran-shiny \
@@ -139,7 +131,6 @@ RUN apt-get update && apt-get install -y \
 
 # Some dependancies for R vscode extension that are not in the repos
 RUN R -e "install.packages(c('languageserver', 'httpgd', lintr))"
-
 
 # Installing shiny server
 RUN apt-get update && apt-get install -y \
@@ -166,7 +157,7 @@ COPY shiny-server.sh /usr/bin/shiny-server.sh
 CMD ["/usr/bin/shiny-server.sh"]
 
 #===============================================================================
-# Build Geospatial, list taken from 
+# Build Geospatial, list taken from js2-jupyterhub
 #===============================================================================
 RUN apt-get update && \
     apt install -y \
@@ -194,7 +185,6 @@ RUN apt-get update && \
     protobuf-compiler \
     sqlite3 \
     tk-dev \
-    unixodbc \
     unixodbc-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -206,21 +196,13 @@ USER openvscode-server
 #===============================================================================
 # install R packages via conda
 #===============================================================================
-RUN conda install --quiet --yes \
+RUN mamba install --quiet --yes \
     'r-base' \
     'r-caret' \
     'r-crayon' \
     'r-devtools' \
-    'r-e1071' \
-    'r-forecast' \
-    'r-hexbin' \
-    'r-htmltools' \
-    'r-htmlwidgets' \
     'r-irkernel' \
-    'r-nycflights13' \
-    'r-randomforest' \
     'r-rcurl' \
-    'r-rmarkdown' \
     'r-rodbc' \
     'r-rsqlite' \
     'r-shiny' \
