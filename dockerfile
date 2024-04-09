@@ -113,24 +113,10 @@ RUN apt-get update && apt-get install -y \
     add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
     add-apt-repository "ppa:c2d4u.team/c2d4u4.0+"
 
-# Install R and some useful cran packages
+# Install R and R shiny package
 RUN apt-get update && apt-get install -y \ 
     r-base \
-    r-cran-caret \
-    r-cran-crayon \
-    r-cran-devtools \
-    r-cran-irkernel \
-    r-cran-curl \
-    r-cran-rodbc \
-    r-cran-rsqlite \
-    r-cran-shiny \
-    r-cran-tidyverse \
-    r-cran-renv \
-    r-cran-rmarkdown \
-    r-cran-cairo
-
-# Some dependancies for R vscode extension that are not in the repos
-RUN R -e "install.packages(c('languageserver', 'httpgd', lintr))"
+    r-cran-shiny
 
 # Installing shiny server
 RUN apt-get update && apt-get install -y \
@@ -185,8 +171,30 @@ RUN apt-get update && \
     protobuf-compiler \
     sqlite3 \
     tk-dev \
+    unixodbc \
     unixodbc-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+#===============================================================================
+# Additional R packages (not from conda/mamba)
+#===============================================================================
+# Install some useful cran packages
+RUN apt-get update && apt-get install -y \ 
+    r-cran-caret \
+    r-cran-crayon \
+    r-cran-devtools \
+    r-cran-irkernel \
+    r-cran-curl \
+    r-cran-rodbc \
+    r-cran-rsqlite \
+    r-cran-duckdb \
+    r-cran-tidyverse \
+    r-cran-renv \
+    r-cran-rmarkdown \
+    r-cran-cairo
+
+# Some dependancies for R vscode extension that are not in the repos
+RUN R -e "install.packages(c('languageserver', 'httpgd', 'lintr'))"
 
 #===============================================================================
 # to restore permissions for the web interface
@@ -198,6 +206,7 @@ USER openvscode-server
 #===============================================================================
 RUN mamba install --quiet --yes \
     'r-base' \
+    'r-shiny' \
     'r-caret' \
     'r-crayon' \
     'r-devtools' \
@@ -205,7 +214,7 @@ RUN mamba install --quiet --yes \
     'r-rcurl' \
     'r-rodbc' \
     'r-rsqlite' \
-    'r-shiny' \
+    'r-duckdb' \
     'r-tidyverse' \
     'r-renv' \
     'r-rmarkdown' \
