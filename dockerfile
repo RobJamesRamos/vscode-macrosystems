@@ -179,22 +179,28 @@ RUN apt-get update && \
 # Additional R packages (not from conda/mamba)
 #===============================================================================
 # Install some useful cran packages
-RUN apt-get update && apt-get install -y \ 
+RUN apt-get update && apt-get install -y \
+    r-cran-devtools \
     r-cran-caret \
     r-cran-crayon \
-    r-cran-devtools \
     r-cran-irkernel \
     r-cran-curl \
     r-cran-rodbc \
     r-cran-rsqlite \
     r-cran-duckdb \
     r-cran-tidyverse \
-    r-cran-renv \
     r-cran-rmarkdown \
     r-cran-cairo
 
 # Some dependancies for R vscode extension that are not in the repos
 RUN R -e "install.packages(c('languageserver', 'httpgd', 'lintr'))"
+
+#===============================================================================
+# Dotnet Install
+#===============================================================================
+# Install dotnet 8 from ubuntu repos
+RUN sudo apt-get update && \
+    sudo apt-get install -y dotnet-sdk-8.0
 
 #===============================================================================
 # to restore permissions for the web interface
@@ -207,23 +213,46 @@ USER openvscode-server
 RUN mamba install --quiet --yes \
     'r-base' \
     'r-shiny' \
+    'gcc_linux-64' \
+    'gxx_linux-64' \
+    'gfortran_linux-64' \
+    'r-rcpp' \
+    'r-devtools' \
     'r-caret' \
     'r-crayon' \
-    'r-devtools' \
     'r-irkernel' \
     'r-rcurl' \
     'r-rodbc' \
     'r-rsqlite' \
     'r-duckdb' \
     'r-tidyverse' \
-    'r-renv' \
     'r-rmarkdown' \
+    'r-cairo' \
     'r-languageserver' \
     'r-httpgd' \
     'r-lintr' \
-    'r-cairo' \
     'unixodbc' && \
     conda clean --all -f -y
+
+#===============================================================================
+# Setup Dotnet to work with jupyter notebooks
+#===============================================================================
+# Install dotnet interactive
+RUN dotnet tool install -g Microsoft.dotnet-interactive
+
+# Install jupyter and Python in conda
+RUN mamba install --quiet --yes \
+    'jupyter' \
+    'ipykernel' && \
+    conda clean --all -f -y
+
+# Register dotnet kernals with jupyterlab
+RUN dotnet interactive jupyter install
+
+# Register the ipykernel wity jupyterlab
+RUN conda activate base && \
+    python -m ipykernel install --user --name=python3 && \
+    conda deactivate
 
 #===============================================================================
 # Install vscode extensions by default
