@@ -239,6 +239,7 @@ RUN mamba install --quiet --yes \
 #===============================================================================
 # Install dotnet interactive
 RUN dotnet tool install -g Microsoft.dotnet-interactive
+ENV PATH $PATH:/home/workspace/.dotnet/tools
 
 # Install jupyter and Python in conda
 RUN mamba install --quiet --yes \
@@ -249,10 +250,7 @@ RUN mamba install --quiet --yes \
 # Register dotnet kernals with jupyterlab
 RUN dotnet interactive jupyter install
 
-# Register the ipykernel wity jupyterlab
-RUN conda activate base && \
-    python -m ipykernel install --user --name=python3 && \
-    conda deactivate
+RUN python -m ipykernel install --user --name=python3
 
 #===============================================================================
 # Install vscode extensions by default
@@ -269,6 +267,12 @@ RUN \
         ms-python.python \
         rust-lang.rust-analyzer \
         golang.Go \
+        # not on open-vsx
+        # ms-dotnettools.csharp \
+        muhammad-sammy.csharp \
+        # not on open-vsx
+        # ms-dotnettools.dotnet-interactive-vscode \
+        Ionide.Ionide-fsharp \
     )\
     # Install the $exts
     && for ext in "${exts[@]}"; do ${OPENVSCODE} --install-extension "${ext}"; done
