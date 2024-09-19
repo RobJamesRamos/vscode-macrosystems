@@ -89,7 +89,9 @@ RUN wget --quiet \
     rm ~/miniforge.sh && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/workspace/.bashrc && \
+    echo ". /opt/conda/etc/profile.d/mamba.sh" >> /home/workspace/.bashrc && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/workspace/.zshrc && \
+    echo ". /opt/conda/etc/profile.d/mamba.sh" >> /home/workspace/.zshrc && \
     chown -R 1000:1000 /opt/conda
 
 # Install GitHub CLI
@@ -201,6 +203,12 @@ RUN R -e "install.packages(c('languageserver', 'httpgd', 'lintr'))"
 # Install dotnet 8 from ubuntu repos
 RUN sudo apt-get update && \
     sudo apt-get install -y dotnet-sdk-8.0
+
+#===============================================================================
+# Installing Jupyter (not from conda/mamba)
+#===============================================================================
+RUN apt-get update && apt-get install -y \
+    jupyter
 
 #===============================================================================
 # to restore permissions for the web interface
