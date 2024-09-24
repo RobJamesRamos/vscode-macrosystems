@@ -284,3 +284,8 @@ RUN \
     )\
     # Install the $exts
     && for ext in "${exts[@]}"; do ${OPENVSCODE} --install-extension "${ext}"; done
+
+#===============================================================================
+# Create entry point
+#===============================================================================
+ENTRYPOINT ["bash", "/bin/entry.sh"]
