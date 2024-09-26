@@ -266,24 +266,14 @@ RUN python -m ipykernel install --user --name=python3
 ENV OPENVSCODE_SERVER_ROOT="/home/.openvscode-server"
 ENV OPENVSCODE="${OPENVSCODE_SERVER_ROOT}/bin/openvscode-server"
 
-SHELL ["/bin/bash", "-c"]
-RUN \
-    exts=(\
-        GitHub.vscode-pull-request-github \
-        ms-toolsai.jupyter \
-        REditorSupport.r \
-        ms-python.python \
-        rust-lang.rust-analyzer \
-        golang.Go \
-        # not on open-vsx
-        # ms-dotnettools.csharp \
-        muhammad-sammy.csharp \
-        # not on open-vsx
-        # ms-dotnettools.dotnet-interactive-vscode \
-        Ionide.Ionide-fsharp \
-    )\
-    # Install the $exts
-    && for ext in "${exts[@]}"; do ${OPENVSCODE} --install-extension "${ext}"; done
+RUN ${OPENVSCODE} --install-extension "GitHub.vscode-pull-request-github"
+RUN ${OPENVSCODE} --install-extension "ms-toolsai.jupyter"
+RUN ${OPENVSCODE} --install-extension "REditorSupport.r"
+RUN ${OPENVSCODE} --install-extension "ms-python.python"
+RUN ${OPENVSCODE} --install-extension "rust-lang.rust-analyzer"
+RUN ${OPENVSCODE} --install-extension "golang.Go"
+RUN ${OPENVSCODE} --install-extension "muhammad-sammy.csharp"
+RUN ${OPENVSCODE} --install-extension "Ionide.Ionide-fsharp"
 
 #===============================================================================
 # Create entry point
