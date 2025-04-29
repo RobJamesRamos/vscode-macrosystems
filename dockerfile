@@ -37,8 +37,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
-    echo "deb [arch=amd64] https://packages.irods.org/apt/ $(lsb_release -sc) main" >> /etc/apt/sources.list.d/renci-irods.list && \
+RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/renci-irods.gpg && \
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/renci-irods.gpg] https://packages.irods.org/apt/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/renci-irods.list && \
     apt-get update && \
     apt install -y irods-icommands 
 RUN wget -q -c \
