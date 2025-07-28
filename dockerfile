@@ -21,6 +21,12 @@ USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+ENV TZ=America/Phoenix
+ENV LANG=C.UTF-8 
+ENV LC_ALL=C.UTF-8
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 # Install a few dependencies for iCommands, text editing, and monitoring instances
 RUN apt-get update && \
     apt-get install -y lsb-release apt-transport-https curl gnupg2 libfuse2 gettext gcc less nodejs software-properties-common apt-utils glances htop nano  && \
@@ -40,7 +46,7 @@ RUN apt-get update && \
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/renci-irods.gpg && \
 echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/renci-irods.gpg] https://packages.irods.org/apt/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/renci-irods.list && \
     apt-get update && \
-    apt install -y irods-icommands 
+    apt install -y irods-icommands
 RUN wget -q -c \
     http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
 RUN apt install -y \
@@ -65,34 +71,6 @@ RUN echo "deb https://s3.amazonaws.com/repo.deb.cyberduck.io stable main" | tee 
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FE7097963FEFBE72 && \
     apt-get update && \
     apt-get install duck
-
-# Install MiniConda
-ENV TZ America/Phoenix
-ENV LANG=C.UTF-8 
-ENV LC_ALL C.UTF-8
-ENV PATH /opt/conda/bin:$PATH
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ > /etc/timezone
-
-RUN apt-get update && \
-    apt-get install -y wget bzip2 ca-certificates \
-    libglib2.0-0 libxext6 libsm6 libxrender1 \
-    gettext-base git mercurial subversion \
-    tmux && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN wget --quiet \
-    https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
-    -O ~/miniforge.sh && \
-    /bin/bash ~/miniforge.sh -b -p /opt/conda && \
-    rm ~/miniforge.sh && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/workspace/.bashrc && \
-    echo ". /opt/conda/etc/profile.d/mamba.sh" >> /home/workspace/.bashrc && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/workspace/.zshrc && \
-    echo ". /opt/conda/etc/profile.d/mamba.sh" >> /home/workspace/.zshrc && \
-    chown -R 1000:1000 /opt/conda
 
 # Install GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/etc/apt/trusted.gpg.d/githubcli-archive-keyring.gpg && \
@@ -178,7 +156,7 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #===============================================================================
-# Additional R packages (not from conda/mamba)
+# Additional R packages
 #===============================================================================
 # Install some useful cran packages
 RUN apt-get update && apt-get install -y \
@@ -194,15 +172,13 @@ RUN apt-get update && apt-get install -y \
     r-cran-rmarkdown \
     r-cran-cairo
 
-# Some dependancies for R vscode extension that are not in the repos
-RUN R -e "install.packages(c('languageserver', 'httpgd', 'lintr'))"
-
 #===============================================================================
 # Dotnet Install
 #===============================================================================
-# Install dotnet 8 from ubuntu repos
-RUN sudo apt-get update && \
-    sudo apt-get install -y dotnet-sdk-8.0
+# Install dotnet 9 from backports
+RUN sudo add-apt-repository ppa:dotnet/backports && \
+    sudo apt-get update && \
+    sudo apt-get install -y dotnet-sdk-9.0
 
 #===============================================================================
 # Installing Jupyter (not from conda/mamba)
@@ -211,54 +187,58 @@ RUN apt-get update && apt-get install -y \
     jupyter
 
 #===============================================================================
+# Install prereqs for miniconda
+#===============================================================================
+RUN apt-get update && \
+    apt-get install -y wget bzip2 ca-certificates \
+    libglib2.0-0 libxext6 libsm6 libxrender1 \
+    gettext-base git mercurial subversion \
+    tmux && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+#===============================================================================
 # to restore permissions for the web interface
 #===============================================================================
 USER openvscode-server
 
 #===============================================================================
-# install R packages via conda
+# Additional R packages (not from conda/mamba) 
+# Some dependancies for R vscode extension that are not in the repos
 #===============================================================================
-RUN mamba install --quiet --yes \
-    'r-base' \
-    'r-shiny' \
-    'gcc_linux-64' \
-    'gxx_linux-64' \
-    'gfortran_linux-64' \
-    'r-rcpp' \
-    'r-devtools' \
-    'r-caret' \
-    'r-crayon' \
-    'r-irkernel' \
-    'r-rcurl' \
-    'r-rodbc' \
-    'r-rsqlite' \
-    'r-duckdb' \
-    'r-tidyverse' \
-    'r-rmarkdown' \
-    'r-cairo' \
-    'r-languageserver' \
-    'r-httpgd' \
-    'r-lintr' \
-    'unixodbc' && \
-    conda clean --all -f -y
+RUN R -e "dir.create(path = Sys.getenv('R_LIBS_USER'), showWarnings = FALSE, recursive = TRUE)"
+RUN R -e "install.packages(c('languageserver', 'httpgd', 'lintr'), lib=Sys.getenv('R_LIBS_USER'))"
+
+#===============================================================================
+# Install MiniConda
+#===============================================================================
+
+RUN wget --quiet \
+    https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
+    -O ~/miniforge.sh && \
+    /bin/bash ~/miniforge.sh -b &&\
+    rm ~/miniforge.sh
+
+RUN ~/miniforge3/bin/conda init
+RUN ~/miniforge3/bin/conda config --set auto_activate_base false
 
 #===============================================================================
 # Setup Dotnet to work with jupyter notebooks
 #===============================================================================
 # Install dotnet interactive
 RUN dotnet tool install -g Microsoft.dotnet-interactive
-ENV PATH $PATH:/home/workspace/.dotnet/tools
-
-# Install jupyter and Python in conda
-RUN mamba install --quiet --yes \
-    'jupyter' \
-    'ipykernel' && \
-    conda clean --all -f -y
+ENV PATH=$PATH:/home/workspace/.dotnet/tools
 
 # Register dotnet kernals with jupyterlab
 RUN dotnet interactive jupyter install
 
-RUN python -m ipykernel install --user --name=python3
+RUN python3 -m ipykernel install --user --name=python3
+
+# Install jupyter and Python in conda
+RUN ~/miniforge3/bin/conda install --quiet --yes \
+    'jupyter' \
+    'ipykernel' && \
+    ~/miniforge3/bin/conda clean --all -f -y
 
 #===============================================================================
 # Install vscode extensions by default
